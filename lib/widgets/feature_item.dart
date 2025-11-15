@@ -5,10 +5,7 @@ import '../core/constants/app_styles.dart';
 class FeatureItem extends StatelessWidget {
   final String text;
 
-  const FeatureItem({
-    Key? key,
-    required this.text,
-  }) : super(key: key);
+  const FeatureItem({Key? key, required this.text}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +32,7 @@ class FeatureItem extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: AppStyles.body2.copyWith(
-                color: AppColors.textDark,
-              ),
+              style: AppStyles.body2.copyWith(color: AppColors.textDark),
             ),
           ),
         ],

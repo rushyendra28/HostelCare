@@ -62,6 +62,8 @@ class HostelCard extends StatelessWidget {
                   ),
                 ),
 
+                const SizedBox(width: 12),
+
                 // Join/Joined Button
                 _buildActionButton(context),
               ],
@@ -115,6 +117,7 @@ class HostelCard extends StatelessWidget {
   Widget _buildActionButton(BuildContext context) {
     if (hostel.isJoined) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -142,18 +145,18 @@ class HostelCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: onJoinPressed,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              'Exit hostel',
-              style: AppStyles.caption.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
+          InkWell(
+            onTap: onJoinPressed,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                'Exit hostel',
+                style: AppStyles.caption.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
           ),
@@ -173,6 +176,8 @@ class HostelCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         elevation: 0,
+        disabledBackgroundColor: AppColors.textLight.withOpacity(0.3),
+        disabledForegroundColor: Colors.white,
       ),
       child: Text(
         'Join',

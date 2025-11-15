@@ -16,26 +16,17 @@ class MenuDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.85,
-      decoration: const BoxDecoration(
+    return Drawer(
+      child: Container(
         color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-      ),
-      child: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header with Gradient
             Container(
-              padding: const EdgeInsets.all(24),
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
               decoration: const BoxDecoration(
                 gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(24),
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,26 +36,35 @@ class MenuDrawer extends StatelessWidget {
                     children: [
                       Text(
                         'Menu',
-                        style: AppStyles.heading2.copyWith(
+                        style: AppStyles.heading1.copyWith(
                           color: Colors.white,
+                          fontSize: 32,
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
+                        icon: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   if (currentHostel != null) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,15 +72,16 @@ class MenuDrawer extends StatelessWidget {
                           Text(
                             'Current Hostel',
                             style: AppStyles.caption.copyWith(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 12,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             currentHostel!.name,
-                            style: AppStyles.body1.copyWith(
+                            style: AppStyles.heading3.copyWith(
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
                             ),
                           ),
                         ],
@@ -94,50 +95,62 @@ class MenuDrawer extends StatelessWidget {
             // Menu Items
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 children: [
                   _MenuTile(
                     icon: Icons.home_rounded,
                     iconColor: AppColors.primaryBlue,
+                    iconBackground: AppColors.primaryBlue.withOpacity(0.1),
                     title: 'Guest Dashboard',
                     onTap: () {
                       Navigator.pop(context);
                       // Navigate to dashboard
                     },
                   ),
+                  const SizedBox(height: 8),
                   _MenuTile(
                     icon: Icons.receipt_long_rounded,
                     iconColor: const Color(0xFF10B981),
+                    iconBackground: const Color(0xFF10B981).withOpacity(0.1),
                     title: 'My Complaints',
                     onTap: () {
                       Navigator.pop(context);
                       // Navigate to my complaints
                     },
                   ),
+                  const SizedBox(height: 8),
                   _MenuTile(
                     icon: Icons.person_rounded,
                     iconColor: const Color(0xFF6B7280),
+                    iconBackground: const Color(0xFF6B7280).withOpacity(0.1),
                     title: 'Profile',
                     onTap: () {
                       Navigator.pop(context);
                       // Navigate to profile
                     },
                   ),
-                  if (currentHostel != null)
+                  if (currentHostel != null) ...[
+                    const SizedBox(height: 8),
                     _MenuTile(
                       icon: Icons.exit_to_app_rounded,
                       iconColor: AppColors.error,
+                      iconBackground: AppColors.error.withOpacity(0.1),
                       title: 'Exit Current Hostel',
-                      backgroundColor: AppColors.error.withOpacity(0.05),
+                      titleColor: AppColors.error,
                       onTap: () {
                         Navigator.pop(context);
                         onExitHostel?.call();
                       },
                     ),
-                  const Divider(height: 32),
+                  ],
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                    child: Divider(height: 1),
+                  ),
                   _MenuTile(
-                    icon: Icons.admin_panel_settings_rounded,
+                    icon: Icons.shield_rounded,
                     iconColor: AppColors.primaryBlue,
+                    iconBackground: AppColors.primaryBlue.withOpacity(0.1),
                     title: 'Admin Login',
                     onTap: () {
                       Navigator.pop(context);
@@ -162,52 +175,61 @@ class MenuDrawer extends StatelessWidget {
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
+  final Color iconBackground;
   final String title;
+  final Color? titleColor;
   final VoidCallback onTap;
-  final Color? backgroundColor;
 
   const _MenuTile({
     Key? key,
     required this.icon,
     required this.iconColor,
+    required this.iconBackground,
     required this.title,
+    this.titleColor,
     required this.onTap,
-    this.backgroundColor,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: backgroundColor ?? iconColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 24,
-          ),
-        ),
-        title: Text(
-          title,
-          style: AppStyles.body1.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 16,
-          color: AppColors.textLight,
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: iconBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppStyles.body1.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: titleColor ?? AppColors.textDark,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

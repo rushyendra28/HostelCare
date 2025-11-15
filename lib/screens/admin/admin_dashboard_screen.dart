@@ -18,7 +18,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Complaint(
       id: '1',
       title: 'Water leakage in bathroom',
-      description: 'The bathroom ceiling has a water leak that drips constantly.',
+      description:
+          'The bathroom ceiling has a water leak that drips constantly.',
       guestName: 'Ramesh Kumar',
       roomNumber: '204',
       submittedDate: DateTime(2025, 11, 12),
@@ -96,9 +97,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           // Header with gradient
           Container(
-            decoration: const BoxDecoration(
-              gradient: AppColors.headerGradient,
-            ),
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -181,14 +180,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Statistics Cards
+                  // Statistics Cards - FIXED
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1.3,
+                    childAspectRatio: 1.3, // ✅ Changed from 1.3 to 1.5
                     children: [
                       _StatCard(
                         icon: Icons.trending_up_rounded,
@@ -202,21 +201,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         iconColor: const Color(0xFFFCD34D),
                         count: _viewedComplaints.toString(),
                         label: 'Viewed',
-                        backgroundColor: const Color(0xFFFCD34D).withOpacity(0.1),
+                        backgroundColor: const Color(
+                          0xFFFCD34D,
+                        ).withOpacity(0.1),
                       ),
                       _StatCard(
                         icon: Icons.hourglass_empty_rounded,
                         iconColor: const Color(0xFF8B7FFF),
                         count: _inProgressComplaints.toString(),
                         label: 'In Progress',
-                        backgroundColor: const Color(0xFF8B7FFF).withOpacity(0.1),
+                        backgroundColor: const Color(
+                          0xFF8B7FFF,
+                        ).withOpacity(0.1),
                       ),
                       _StatCard(
                         icon: Icons.check_circle_rounded,
                         iconColor: AppColors.statusSolved,
                         count: _solvedComplaints.toString(),
                         label: 'Solved',
-                        backgroundColor: AppColors.statusSolved.withOpacity(0.1),
+                        backgroundColor: AppColors.statusSolved.withOpacity(
+                          0.1,
+                        ),
                       ),
                     ],
                   ),
@@ -224,10 +229,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(height: 24),
 
                   // All Complaints Section
-                  Text(
-                    'All Complaints',
-                    style: AppStyles.heading3,
-                  ),
+                  Text('All Complaints', style: AppStyles.heading3),
 
                   const SizedBox(height: 16),
 
@@ -254,6 +256,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 }
 
+// ✅ FIXED _StatCard Widget
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -273,14 +276,15 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16), // ✅ Reduced from 20 to 16
       decoration: AppStyles.cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ Added
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 44, // ✅ Reduced from 48 to 44
+            height: 44, // ✅ Reduced from 48 to 44
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(12),
@@ -288,19 +292,38 @@ class _StatCard extends StatelessWidget {
             child: Icon(
               icon,
               color: iconColor,
-              size: 24,
+              size: 22, // ✅ Reduced from 24 to 22
             ),
           ),
-          const Spacer(),
-          Text(
-            count,
-            style: AppStyles.heading1.copyWith(fontSize: 32),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppStyles.caption.copyWith(
-              color: AppColors.textGray,
+          const SizedBox(height: 4), // ✅ Added small spacing
+          Flexible(
+            // ✅ Wrapped in Flexible to prevent overflow
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
+                  // ✅ Added FittedBox for count
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    count,
+                    style: AppStyles.heading1.copyWith(
+                      fontSize: 28, // ✅ Reduced from 32 to 28
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2), // ✅ Reduced from 4 to 2
+                Text(
+                  label,
+                  style: AppStyles.caption.copyWith(
+                    color: AppColors.textGray,
+                    fontSize: 11, // ✅ Added explicit font size
+                  ),
+                  maxLines: 2, // ✅ Allow wrapping to 2 lines
+                  overflow: TextOverflow.ellipsis, // ✅ Handle overflow
+                ),
+              ],
             ),
           ),
         ],

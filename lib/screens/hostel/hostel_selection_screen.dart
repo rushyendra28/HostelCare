@@ -5,6 +5,7 @@ import '../../models/hostel.dart';
 import '../../widgets/hostel_card.dart';
 import '../../widgets/custom_text_field.dart';
 import 'hostel_details_screen.dart';
+import '../menu/menu_drawer.dart';
 
 class HostelSelectionScreen extends StatefulWidget {
   const HostelSelectionScreen({Key? key}) : super(key: key);
@@ -25,7 +26,8 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
       location: 'Mumbai',
       rating: 4.5,
       reviews: 234,
-      about: 'A modern and well-maintained hostel with excellent facilities. Our hostel provides a safe and comfortable living environment for students and working professionals. We pride ourselves on quick issue resolution and responsive management.',
+      about:
+          'A modern and well-maintained hostel with excellent facilities. Our hostel provides a safe and comfortable living environment for students and working professionals. We pride ourselves on quick issue resolution and responsive management.',
       amenities: ['Free WiFi', 'Meals', '24/7 Security', 'Common Area'],
       isJoined: false,
     ),
@@ -56,7 +58,13 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
       rating: 4.6,
       reviews: 312,
       about: 'Nestled in the hills, perfect for students seeking tranquility.',
-      amenities: ['Free WiFi', 'Meals', '24/7 Security', 'Common Area', 'Study Room'],
+      amenities: [
+        'Free WiFi',
+        'Meals',
+        '24/7 Security',
+        'Common Area',
+        'Study Room',
+      ],
       isJoined: false,
     ),
   ];
@@ -95,7 +103,7 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
       final hostelIndex = _hostels.indexWhere((h) => h.id == hostelId);
       if (hostelIndex != -1) {
         final hostel = _hostels[hostelIndex];
-        
+
         if (hostel.isJoined) {
           // Exit hostel - show confirmation dialog
           _showExitDialog(hostelId);
@@ -123,7 +131,7 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
               isJoined: true,
             );
             _currentHostelId = hostelId;
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Successfully joined ${hostel.name}'),
@@ -139,13 +147,11 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
 
   void _showExitDialog(String hostelId) {
     final hostel = _hostels.firstWhere((h) => h.id == hostelId);
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -259,7 +265,7 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
           isJoined: false,
         );
         _currentHostelId = null;
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Exited ${hostel.name}'),
@@ -280,134 +286,155 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
     );
   }
 
+  Hostel? get _getCurrentHostel {
+    if (_currentHostelId == null) return null;
+    try {
+      return _hostels.firstWhere((h) => h.id == _currentHostelId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          // Header with gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: AppColors.headerGradient,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // App Bar
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
+      endDrawer: MenuDrawer(
+        currentHostel: _getCurrentHostel,
+        onExitHostel: () {
+          if (_currentHostelId != null) {
+            _showExitDialog(_currentHostelId!);
+          }
+        },
+      ),
+      body: Builder(
+        builder: (context) => Column(
+          children: [
+            // Header with gradient
+            Container(
+              decoration: const BoxDecoration(
+                gradient: AppColors.headerGradient,
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // App Bar
+                      Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.bolt_rounded,
+                              color: Colors.white,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.bolt_rounded,
-                            color: Colors.white,
+                          const SizedBox(width: 12),
+                          Text(
+                            'HostelCare',
+                            style: AppStyles.heading3.copyWith(
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'HostelCare',
-                          style: AppStyles.heading3.copyWith(
-                            color: Colors.white,
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () {
+                              Scaffold.of(context).openEndDrawer();
+                            },
+                            icon: const Icon(
+                              Icons.menu_rounded,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () {
-                            // Open menu drawer
-                          },
-                          icon: const Icon(
-                            Icons.menu_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Title
-                    Text(
-                      'Select Your Hostel',
-                      style: AppStyles.heading1.copyWith(
-                        color: Colors.white,
-                        fontSize: 28,
+                        ],
                       ),
-                    ),
 
-                    const SizedBox(height: 8),
+                      const SizedBox(height: 24),
 
-                    Text(
-                      'Choose your hostel to get started',
-                      style: AppStyles.body1.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                      // Title
+                      Text(
+                        'Select Your Hostel',
+                        style: AppStyles.heading1.copyWith(
+                          color: Colors.white,
+                          fontSize: 28,
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 8),
 
-                    // Search Field
-                    CustomTextField(
-                      hint: 'Search hostels or cities...',
-                      controller: _searchController,
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: Colors.white.withOpacity(0.7),
+                      Text(
+                        'Choose your hostel to get started',
+                        style: AppStyles.body1.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 24),
+
+                      // Search Field
+                      CustomTextField(
+                        hint: 'Search hostels or cities...',
+                        controller: _searchController,
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Hostel List
-          Expanded(
-            child: _filteredHostels.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off_rounded,
-                          size: 64,
-                          color: AppColors.textLight,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No hostels found',
-                          style: AppStyles.body1.copyWith(
-                            color: AppColors.textGray,
+            // Hostel List
+            Expanded(
+              child: _filteredHostels.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off_rounded,
+                            size: 64,
+                            color: AppColors.textLight,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          Text(
+                            'No hostels found',
+                            style: AppStyles.body1.copyWith(
+                              color: AppColors.textGray,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: _filteredHostels.length,
+                      itemBuilder: (context, index) {
+                        final hostel = _filteredHostels[index];
+                        return HostelCard(
+                          hostel: hostel,
+                          onJoinPressed: () => _toggleJoinHostel(hostel.id),
+                          onCardTap: () => _navigateToDetails(hostel),
+                          showExitMessage:
+                              _currentHostelId != null && !hostel.isJoined,
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _filteredHostels.length,
-                    itemBuilder: (context, index) {
-                      final hostel = _filteredHostels[index];
-                      return HostelCard(
-                        hostel: hostel,
-                        onJoinPressed: () => _toggleJoinHostel(hostel.id),
-                        onCardTap: () => _navigateToDetails(hostel),
-                        showExitMessage: _currentHostelId != null && !hostel.isJoined,
-                      );
-                    },
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
