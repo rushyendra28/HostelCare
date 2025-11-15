@@ -4,6 +4,7 @@ import '../../core/constants/app_styles.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
 import 'admin_dashboard_screen.dart';
+import 'admin_signup_screen.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({Key? key}) : super(key: key);
@@ -42,9 +43,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const AdminDashboardScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
         );
       }
     }
@@ -87,18 +86,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 const SizedBox(height: 40),
 
                 // Title
-                Text(
-                  'Admin Login',
-                  style: AppStyles.heading1,
-                ),
+                Text('Admin Login', style: AppStyles.heading1),
 
                 const SizedBox(height: 8),
 
                 Text(
                   'Sign in to manage hostel complaints',
-                  style: AppStyles.body1.copyWith(
-                    color: AppColors.textGray,
-                  ),
+                  style: AppStyles.body1.copyWith(color: AppColors.textGray),
                 ),
 
                 const SizedBox(height: 48),
@@ -251,7 +245,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 const SizedBox(height: 24),
 
                 // Sign Up Link
-                // Sign Up Link
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -264,7 +257,12 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          // Navigate to sign up
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminSignUpScreen(),
+                            ),
+                          );
                         },
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
