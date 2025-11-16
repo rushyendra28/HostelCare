@@ -65,3 +65,394 @@
 
 ### Dependencies
 ```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.14.0
+  
+  # UI & Design
+  google_fonts: ^6.1.0
+  smooth_page_indicator: ^1.1.0
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Utilities
+  image_picker: ^1.0.7
+  intl: ^0.18.1
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Flutter SDK (3.0 or higher)
+- Dart SDK (3.0 or higher)
+- Android Studio / Xcode
+- Firebase Account
+- Node.js (for Firebase CLI)
+
+### Installation
+
+1. **Clone the repository**
+```bash
+   git clone https://github.com/rushyendra28/hostelcare.git
+   cd hostelcare
+```
+
+2. **Install dependencies**
+```bash
+   flutter pub get
+```
+
+3. **Firebase Setup**
+   a. Install Firebase CLI
+```bash
+   npm install -g firebase-tools
+   firebase login
+```
+   
+   b. Install FlutterFire CLI
+```bash
+   dart pub global activate flutterfire_cli
+```
+   
+   c. Configure Firebase
+```bash
+   flutterfire configure
+```
+   
+   d. Select your Firebase project and platforms (iOS/Android)
+
+4. **Download Configuration Files**
+   - For Android: Place `google-services.json` in `android/app/`
+   - For iOS: Place `GoogleService-Info.plist` in `ios/Runner/`
+
+5. **Run the app**
+```bash
+   flutter run
+```
+---
+
+## 📁 Project Structure
+```
+hostelcare/
+├── lib/
+│   ├── core/
+│   │   ├── constants/
+│   │   │   ├── app_colors.dart
+│   │   │   ├── app_strings.dart
+│   │   │   └── app_styles.dart
+│   │   └── utils/
+│   ├── models/
+│   │   ├── hostel.dart
+│   │   ├── complaint.dart
+│   │   └── user.dart
+│   ├── screens/
+│   │   ├── welcome/
+│   │   ├── onboarding/
+│   │   ├── hostel/
+│   │   ├── complaint/
+│   │   ├── admin/
+│   │   └── menu/
+│   ├── services/
+│   │   ├── auth_service.dart
+│   │   ├── hostel_service.dart
+│   │   └── complaint_service.dart
+│   ├── widgets/
+│   │   ├── custom_button.dart
+│   │   ├── custom_text_field.dart
+│   │   ├── hostel_card.dart
+│   │   ├── complaint_card.dart
+│   │   └── status_badge.dart
+│   ├── firebase_options.dart
+│   └── main.dart
+├── android/
+├── ios/
+├── assets/
+├── test/
+├── pubspec.yaml
+└── README.md
+```
+
+---
+
+## 🔥 Firebase Configuration
+
+### Firestore Collections
+
+#### `users`
+```javascript
+{
+  "userId": {
+    "name": "string",
+    "email": "string",
+    "role": "guest" | "admin",
+    "currentHostelId": "string | null",
+    "createdAt": "timestamp"
+  }
+}
+```
+
+#### `hostels`
+```javascript
+{
+  "hostelId": {
+    "name": "string",
+    "location": "string",
+    "rating": "number",
+    "reviews": "number",
+    "about": "string",
+    "amenities": ["array of strings"],
+    "adminId": "string",
+    "createdAt": "timestamp"
+  }
+}
+```
+
+#### `complaints`
+```javascript
+{
+  "complaintId": {
+    "hostelId": "string",
+    "userId": "string",
+    "guestName": "string",
+    "roomNumber": "string",
+    "title": "string",
+    "description": "string",
+    "status": "viewed" | "in_progress" | "solved",
+    "photoUrl": "string | null",
+    "submittedDate": "timestamp",
+    "updatedDate": "timestamp"
+  }
+}
+```
+
+#### `hostel_members`
+```javascript
+{
+  "hostelId": {
+    "members": {
+      "userId": {
+        "name": "string",
+        "joinedAt": "timestamp"
+      }
+    }
+  }
+}
+```
+
+---
+
+## 🔒 Security Rules
+
+### Firestore Security Rules
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update, delete: if isOwner(userId);
+    }
+    
+    match /hostels/{hostelId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    match /complaints/{complaintId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    match /hostel_members/{hostelId}/members/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+  }
+}
+```
+
+---
+
+## 🎯 Key Features Implementation
+
+### Authentication Flow
+```dart
+// Sign up as Guest
+await authService.signUpGuest(
+  email: email,
+  password: password,
+  name: name,
+);
+
+// Sign in
+await authService.signIn(
+  email: email,
+  password: password,
+);
+
+// Admin login with role verification
+await authService.signInAsAdmin(
+  email: email,
+  password: password,
+);
+```
+
+### Hostel Management
+```dart
+// Get all hostels (real-time)
+Stream<List> hostelsStream = hostelService.getHostels();
+
+// Join hostel
+await hostelService.joinHostel(
+  userId: userId,
+  hostelId: hostelId,
+  userName: userName,
+);
+
+// Exit hostel
+await hostelService.exitHostel(
+  userId: userId,
+  hostelId: hostelId,
+);
+```
+
+### Complaint Management
+```dart
+// Submit complaint
+String complaintId = await complaintService.submitComplaint(
+  hostelId: hostelId,
+  userId: userId,
+  guestName: name,
+  roomNumber: room,
+  title: title,
+  description: description,
+);
+
+// Update status (Admin)
+await complaintService.updateComplaintStatus(
+  complaintId: complaintId,
+  status: 'solved',
+);
+
+// Get user complaints (real-time)
+Stream<List> complaintsStream = 
+  complaintService.getUserComplaints(userId);
+```
+
+---
+
+## 📱 Build & Deploy
+
+### Android
+```bash
+flutter build apk --release
+```
+
+### iOS
+```bash
+flutter build ios --release
+```
+
+---
+
+## 🧪 Testing
+
+Run tests:
+```bash
+flutter test
+```
+
+Run with code coverage:
+```bash
+flutter test --coverage
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 👥 Authors
+
+- **Rushyendra** - *Initial work* - Rushyendra(https://github.com/rushyendra28)
+
+---
+
+## 🙏 Acknowledgments
+
+- Flutter team for the amazing framework
+- Firebase for backend services
+- Google Fonts for typography
+- Material Design for UI guidelines
+- All contributors and supporters
+
+---
+
+## 🗺️ Roadmap
+
+### Version 1.0 (Current)
+- ✅ User authentication
+- ✅ Hostel browsing and joining
+- ✅ Complaint submission
+- ✅ Real-time status updates
+- ✅ Admin dashboard
+
+### Version 2.0 (Planned)
+- 📱 Push notifications
+- 💬 In-app messaging
+- 📊 Advanced analytics
+- 🌐 Multi-language support
+- 🎨 Customizable themes
+- 📸 Multiple photo uploads
+- 🔍 Advanced search filters
+- ⭐ Rating system for hostels
+
+---
+
+## 🐛 Known Issues
+
+- None reported yet
+
+---
+
+## 📊 Stats
+
+![GitHub repo size](https://img.shields.io/github/repo-size/rushyendra28/hostelcare)
+![GitHub contributors](https://img.shields.io/github/contributors/rushyendra28/hostelcare)
+![GitHub stars](https://img.shields.io/github/stars/rushyendra28/hostelcare?style=social)
+![GitHub forks](https://img.shields.io/github/forks/rushyendra28/hostelcare?style=social)
+
