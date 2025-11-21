@@ -28,10 +28,10 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
   void initState() {
     super.initState();
 
-    // 🔥 NEW: pre-fill search text
+    // Pre-fill search text
     _searchController.text = widget.searchQuery;
 
-    // 🔥 NEW: initial filtering using searchQuery
+    // Initial filtering using searchQuery
     final query = widget.searchQuery.toLowerCase();
     if (query.isEmpty) {
       _filteredHostels = globalHostels;
@@ -42,17 +42,13 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
       }).toList();
     }
 
-    // Existing listener — do not modify
     _searchController.addListener(_filterHostels);
   }
 
-  /// 🔥 IMPORTANT: Refresh hostels when coming back to this page
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     setState(() {
-      // ✔ Don't override filter, only reset full list
-      // (actual filtering continues via searchController listener)
       if (_searchController.text.isEmpty) {
         _filteredHostels = globalHostels;
       }
@@ -65,6 +61,9 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
     super.dispose();
   }
 
+  // ---------------------------------------------------------
+  // 🔥 FILTER
+  // ---------------------------------------------------------
   void _filterHostels() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -79,6 +78,21 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
     });
   }
 
+  // ---------------------------------------------------------
+  // 🔥 PULL-TO-REFRESH FUNCTION
+  // ---------------------------------------------------------
+  Future<void> _refreshHostels() async {
+    await Future.delayed(const Duration(milliseconds: 600)); // smooth animation
+
+    setState(() {
+      _filteredHostels = List.from(globalHostels);
+      _filterHostels(); // re-apply filtering with search text
+    });
+  }
+
+  // ---------------------------------------------------------
+  // 🔥 ADD HOSTEL
+  // ---------------------------------------------------------
   Future<void> _openAddHostel() async {
     final newHostel = await Navigator.push(
       context,
@@ -89,10 +103,7 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
       globalHostels.add(newHostel);
 
       setState(() {
-        // refresh the whole list
         _filteredHostels = List.from(globalHostels);
-
-        // re-apply search filter (if search field is not empty)
         _filterHostels();
       });
 
@@ -106,6 +117,9 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
     }
   }
 
+  // ---------------------------------------------------------
+  // JOIN EXISTING FUNCTIONS
+  // ---------------------------------------------------------
   void _toggleJoinHostel(String hostelId) {
     setState(() {
       final index = globalHostels.indexWhere((h) => h.id == hostelId);
@@ -297,6 +311,9 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
     }
   }
 
+  // ---------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -413,19 +430,24 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: _filteredHostels.length,
-                      itemBuilder: (context, index) {
-                        final hostel = _filteredHostels[index];
-                        return HostelCard(
-                          hostel: hostel,
-                          onJoinPressed: () => _toggleJoinHostel(hostel.id),
-                          onCardTap: () => _openHostelDetails(hostel),
-                          showExitMessage:
-                              _currentHostelId != null && !hostel.isJoined,
-                        );
-                      },
+                  : RefreshIndicator(
+                      onRefresh: _refreshHostels,
+                      color: AppColors.primaryBlue,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: _filteredHostels.length,
+                        itemBuilder: (context, index) {
+                          final hostel = _filteredHostels[index];
+                          return HostelCard(
+                            hostel: hostel,
+                            onJoinPressed: () => _toggleJoinHostel(hostel.id),
+                            onCardTap: () => _openHostelDetails(hostel),
+                            showExitMessage:
+                                _currentHostelId != null && !hostel.isJoined,
+                          );
+                        },
+                      ),
                     ),
             ),
           ],
