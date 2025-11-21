@@ -301,71 +301,71 @@ class _HostelDetailsScreenState extends State<HostelDetailsScreen> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              // Rating
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.star_rounded,
-                                      size: 28,
-                                      color: Color(0xFFFCD34D),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _hostel.rating.toStringAsFixed(1),
-                                      style: AppStyles.heading2.copyWith(
-                                        fontSize: 22,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Rating',
-                                      style: AppStyles.caption.copyWith(
-                                        color: AppColors.textGray,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                          // Row(
+                          //   children: [
+                          //     // Rating
+                          //     Expanded(
+                          //       child: Column(
+                          //         mainAxisSize: MainAxisSize.min,
+                          //         children: [
+                          //           const Icon(
+                          //             Icons.star_rounded,
+                          //             size: 28,
+                          //             color: Color(0xFFFCD34D),
+                          //           ),
+                          //           const SizedBox(height: 8),
+                          //           Text(
+                          //             _hostel.rating.toStringAsFixed(1),
+                          //             style: AppStyles.heading2.copyWith(
+                          //               fontSize: 22,
+                          //             ),
+                          //           ),
+                          //           const SizedBox(height: 4),
+                          //           Text(
+                          //             'Rating',
+                          //             style: AppStyles.caption.copyWith(
+                          //               color: AppColors.textGray,
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ),
 
-                              Container(
-                                width: 1,
-                                height: 48,
-                                color: AppColors.cardBackground,
-                              ),
+                          //     Container(
+                          //       width: 1,
+                          //       height: 48,
+                          //       color: AppColors.cardBackground,
+                          //     ),
 
-                              // Reviews
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.edit_note_rounded,
-                                      size: 28,
-                                      color: AppColors.primaryBlue,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _hostel.reviews.toString(),
-                                      style: AppStyles.heading2.copyWith(
-                                        fontSize: 22,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Reviews',
-                                      style: AppStyles.caption.copyWith(
-                                        color: AppColors.textGray,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                          //     // Reviews
+                          //     Expanded(
+                          //       child: Column(
+                          //         mainAxisSize: MainAxisSize.min,
+                          //         children: [
+                          //           const Icon(
+                          //             Icons.edit_note_rounded,
+                          //             size: 28,
+                          //             color: AppColors.primaryBlue,
+                          //           ),
+                          //           const SizedBox(height: 8),
+                          //           Text(
+                          //             _hostel.reviews.toString(),
+                          //             style: AppStyles.heading2.copyWith(
+                          //               fontSize: 22,
+                          //             ),
+                          //           ),
+                          //           const SizedBox(height: 4),
+                          //           Text(
+                          //             'Reviews',
+                          //             style: AppStyles.caption.copyWith(
+                          //               color: AppColors.textGray,
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),

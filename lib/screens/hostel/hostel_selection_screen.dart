@@ -10,7 +10,9 @@ import '../menu/menu_drawer.dart';
 import 'add_hostel_screen.dart';
 
 class HostelSelectionScreen extends StatefulWidget {
-  const HostelSelectionScreen({Key? key}) : super(key: key);
+  final String searchQuery;
+
+  const HostelSelectionScreen({super.key, required this.searchQuery});
 
   @override
   State<HostelSelectionScreen> createState() => _HostelSelectionScreenState();
@@ -25,7 +27,22 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredHostels = globalHostels;
+
+    // 🔥 NEW: pre-fill search text
+    _searchController.text = widget.searchQuery;
+
+    // 🔥 NEW: initial filtering using searchQuery
+    final query = widget.searchQuery.toLowerCase();
+    if (query.isEmpty) {
+      _filteredHostels = globalHostels;
+    } else {
+      _filteredHostels = globalHostels.where((hostel) {
+        return hostel.name.toLowerCase().contains(query) ||
+            hostel.location.toLowerCase().contains(query);
+      }).toList();
+    }
+
+    // Existing listener — do not modify
     _searchController.addListener(_filterHostels);
   }
 
@@ -34,7 +51,11 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     setState(() {
-      _filteredHostels = globalHostels;
+      // ✔ Don't override filter, only reset full list
+      // (actual filtering continues via searchController listener)
+      if (_searchController.text.isEmpty) {
+        _filteredHostels = globalHostels;
+      }
     });
   }
 
@@ -68,7 +89,11 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
       globalHostels.add(newHostel);
 
       setState(() {
-        _filteredHostels = globalHostels;
+        // refresh the whole list
+        _filteredHostels = List.from(globalHostels);
+
+        // re-apply search filter (if search field is not empty)
+        _filterHostels();
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -282,7 +307,6 @@ class _HostelSelectionScreenState extends State<HostelSelectionScreen> {
           if (_currentHostelId != null) _showExitDialog(_currentHostelId!);
         },
       ),
-
       body: Builder(
         builder: (context) => Column(
           children: [

@@ -22,13 +22,16 @@ class _HostelSearchScreenState extends State<HostelSearchScreen> {
   }
 
   void _searchHostels() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HostelSelectionScreen(),
-      ),
-    );
-  }
+  final query = _searchController.text.trim();
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => HostelSelectionScreen(searchQuery: query),
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
