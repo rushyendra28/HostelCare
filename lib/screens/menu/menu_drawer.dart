@@ -8,11 +8,8 @@ class MenuDrawer extends StatelessWidget {
   final Hostel? currentHostel;
   final VoidCallback? onExitHostel;
 
-  const MenuDrawer({
-    Key? key,
-    this.currentHostel,
-    this.onExitHostel,
-  }) : super(key: key);
+  const MenuDrawer({Key? key, this.currentHostel, this.onExitHostel})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -97,38 +94,38 @@ class MenuDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 children: [
-                  _MenuTile(
-                    icon: Icons.home_rounded,
-                    iconColor: AppColors.primaryBlue,
-                    iconBackground: AppColors.primaryBlue.withOpacity(0.1),
-                    title: 'Guest Dashboard',
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Navigate to dashboard
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    icon: Icons.receipt_long_rounded,
-                    iconColor: const Color(0xFF10B981),
-                    iconBackground: const Color(0xFF10B981).withOpacity(0.1),
-                    title: 'My Complaints',
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Navigate to my complaints
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    icon: Icons.person_rounded,
-                    iconColor: const Color(0xFF6B7280),
-                    iconBackground: const Color(0xFF6B7280).withOpacity(0.1),
-                    title: 'Profile',
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Navigate to profile
-                    },
-                  ),
+                  // _MenuTile(
+                  //   icon: Icons.home_rounded,
+                  //   iconColor: AppColors.primaryBlue,
+                  //   iconBackground: AppColors.primaryBlue.withOpacity(0.1),
+                  //   title: 'Guest Dashboard',
+                  //   onTap: () {
+                  //     Navigator.pop(context);
+                  //     // Navigate to dashboard
+                  //   },
+                  // ),
+                  // const SizedBox(height: 8),
+                  // _MenuTile(
+                  //   icon: Icons.receipt_long_rounded,
+                  //   iconColor: const Color(0xFF10B981),
+                  //   iconBackground: const Color(0xFF10B981).withOpacity(0.1),
+                  //   title: 'My Complaints',
+                  //   onTap: () {
+                  //     Navigator.pop(context);
+                  //     // Navigate to my complaints
+                  //   },
+                  // ),
+                  // const SizedBox(height: 8),
+                  // _MenuTile(
+                  //   icon: Icons.person_rounded,
+                  //   iconColor: const Color(0xFF6B7280),
+                  //   iconBackground: const Color(0xFF6B7280).withOpacity(0.1),
+                  //   title: 'Profile',
+                  //   onTap: () {
+                  //     Navigator.pop(context);
+                  //     // Navigate to profile
+                  //   },
+                  // ),
                   if (currentHostel != null) ...[
                     const SizedBox(height: 8),
                     _MenuTile(
@@ -210,11 +207,7 @@ class _MenuTile extends StatelessWidget {
                     color: iconBackground,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 24,
-                  ),
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -1,5 +1,6 @@
-package com.example.hostelcare
+package com.hostel.hostelcare
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity : FlutterActivity()
+class MainActivity: FlutterActivity() {
+}

@@ -7,8 +7,9 @@ class Complaint {
   final String guestName;
   final String roomNumber;
   final DateTime submittedDate;
-  final ComplaintStatus status;
+  ComplaintStatus status;
   final String? photoUrl;
+  final String hostelId; // ✅ NEW FIELD
 
   Complaint({
     required this.id,
@@ -18,6 +19,7 @@ class Complaint {
     required this.roomNumber,
     required this.submittedDate,
     required this.status,
+    required this.hostelId,    // ✅ REQUIRED NOW
     this.photoUrl,
   });
 
@@ -30,6 +32,7 @@ class Complaint {
       roomNumber: json['roomNumber'],
       submittedDate: DateTime.parse(json['submittedDate']),
       status: _statusFromString(json['status']),
+      hostelId: json['hostelId'],   // ✅
       photoUrl: json['photoUrl'],
     );
   }
@@ -43,7 +46,7 @@ class Complaint {
       case 'solved':
         return ComplaintStatus.solved;
       default:
-        return ComplaintStatus.viewed;
+        return ComplaintStatus.inProgress;
     }
   }
 

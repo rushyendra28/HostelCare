@@ -1,97 +1,213 @@
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
 import '../../models/hostel.dart';
-import '../../widgets/amenity_card.dart';
-import '../../widgets/feature_item.dart';
-import '../../widgets/custom_button.dart';
+import '../../data/hostel_data.dart';
 import '../complaint/post_complaint_screen.dart';
-import '../menu/menu_drawer.dart';
 
-class HostelDetailsScreen extends StatelessWidget {
+class HostelDetailsScreen extends StatefulWidget {
   final Hostel hostel;
 
   const HostelDetailsScreen({Key? key, required this.hostel}) : super(key: key);
 
-  IconData _getAmenityIcon(String amenity) {
-    final amenityLower = amenity.toLowerCase();
-    if (amenityLower.contains('wifi')) {
-      return Icons.wifi_rounded;
-    } else if (amenityLower.contains('meal')) {
-      return Icons.restaurant_rounded;
-    } else if (amenityLower.contains('security')) {
-      return Icons.shield_rounded;
-    } else if (amenityLower.contains('common') ||
-        amenityLower.contains('area')) {
-      return Icons.people_rounded;
-    } else if (amenityLower.contains('gym')) {
-      return Icons.fitness_center_rounded;
-    } else if (amenityLower.contains('study')) {
-      return Icons.menu_book_rounded;
-    } else if (amenityLower.contains('laundry')) {
-      return Icons.local_laundry_service_rounded;
-    } else if (amenityLower.contains('parking')) {
-      return Icons.local_parking_rounded;
+  @override
+  State<HostelDetailsScreen> createState() => _HostelDetailsScreenState();
+}
+
+class _HostelDetailsScreenState extends State<HostelDetailsScreen> {
+  late Hostel _hostel; // current hostel in this screen
+  Hostel? _joinedHostel; // any hostel that is currently joined (global)
+
+  @override
+  void initState() {
+    super.initState();
+
+    // sync _hostel with global list if present
+    final index = globalHostels.indexWhere((h) => h.id == widget.hostel.id);
+    if (index != -1) {
+      _hostel = globalHostels[index];
     } else {
-      return Icons.check_circle_rounded;
+      _hostel = widget.hostel;
+    }
+
+    // find any joined hostel globally
+    Hostel? joined;
+    for (final h in globalHostels) {
+      if (h.isJoined) {
+        joined = h;
+        break;
+      }
+    }
+    _joinedHostel = joined;
+  }
+
+  bool get _isJoined => _hostel.isJoined;
+
+  String get _cityName {
+    try {
+      final parts = _hostel.location.split(',');
+      if (parts.length >= 4) {
+        return parts[3].trim();
+      }
+      return _hostel.location;
+    } catch (_) {
+      return _hostel.location;
     }
   }
 
-  void _reportProblem(BuildContext context) {
-    if (hostel.isJoined) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PostComplaintScreen(hostel: hostel),
-        ),
-      );
-    } else {
+  void _joinHostel() {
+    // if some OTHER hostel is already joined, block joining this one
+    if (_joinedHostel != null && _joinedHostel!.id != _hostel.id) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please join the hostel first to report a problem'),
+        SnackBar(
+          content: const Text('Please exit your current hostel first'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
     }
+
+    setState(() {
+      final idx = globalHostels.indexWhere((h) => h.id == _hostel.id);
+      final updated = Hostel(
+        id: _hostel.id,
+        name: _hostel.name,
+        location: _hostel.location,
+        rating: _hostel.rating,
+        reviews: _hostel.reviews,
+        about: _hostel.about ?? '',
+        amenities: _hostel.amenities,
+        isJoined: true,
+      );
+
+      _hostel = updated;
+      if (idx != -1) {
+        globalHostels[idx] = updated;
+      }
+      _joinedHostel = updated;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Joined ${_hostel.name}'),
+        backgroundColor: AppColors.statusSolved,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _exitHostel() {
+    setState(() {
+      final idx = globalHostels.indexWhere((h) => h.id == _hostel.id);
+      final updated = Hostel(
+        id: _hostel.id,
+        name: _hostel.name,
+        location: _hostel.location,
+        rating: _hostel.rating,
+        reviews: _hostel.reviews,
+        about: _hostel.about ?? '',
+        amenities: _hostel.amenities,
+        isJoined: false,
+      );
+
+      _hostel = updated;
+      if (idx != -1) {
+        globalHostels[idx] = updated;
+      }
+
+      // if this hostel was the joined one, clear global joined
+      if (_joinedHostel != null && _joinedHostel!.id == updated.id) {
+        _joinedHostel = null;
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Exited ${_hostel.name}'),
+        backgroundColor: AppColors.textGray,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // Short label mapping for amenities to match the design (Free, Meals, 24/7, Comm, etc.)
+  String _shortAmenityLabel(String a) {
+    switch (a.toLowerCase()) {
+      case 'free wifi':
+        return 'Free';
+      case 'meals':
+        return 'Meals';
+      case '24/7 security':
+        return '24/7';
+      case 'common area':
+        return 'Comm';
+      default:
+        // default -> first word
+        final parts = a.split(' ');
+        return parts.isNotEmpty ? parts.first : a;
+    }
+  }
+
+  IconData _amenityIcon(String a) {
+    final lower = a.toLowerCase();
+    if (lower.contains('wifi')) return Icons.wifi_rounded;
+    if (lower.contains('meal') || lower.contains('food')) {
+      return Icons.restaurant_rounded;
+    }
+    if (lower.contains('security') || lower.contains('guard')) {
+      return Icons.shield_rounded;
+    }
+    if (lower.contains('common') || lower.contains('community')) {
+      return Icons.groups_rounded;
+    }
+    if (lower.contains('gym')) return Icons.fitness_center_rounded;
+    if (lower.contains('study')) return Icons.menu_book_rounded;
+    if (lower.contains('laundry')) return Icons.local_laundry_service_rounded;
+    if (lower.contains('hot water')) return Icons.water_drop_rounded;
+    return Icons.check_rounded;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Static “features” list, like in screenshot
+    const features = [
+      'Real-time complaint tracking',
+      'Quick response from management',
+      '24/7 support system',
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      endDrawer: MenuDrawer(
-        currentHostel: hostel.isJoined ? hostel : null,
-        onExitHostel: () {
-          // Handle exit hostel from details screen
-          Navigator.pop(context);
-        },
-      ),
-      body: Builder(
-        builder: (context) => Column(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            // Header with gradient
+            // HEADER (gradient, back, bolt, title, menu)
             Container(
               decoration: const BoxDecoration(
                 gradient: AppColors.headerGradient,
               ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top row: back + bolt + title + menu
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // App Bar
                       Row(
                         children: [
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: Container(
+                          // Back button
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                               child: const Icon(
                                 Icons.arrow_back_rounded,
@@ -100,12 +216,13 @@ class HostelDetailsScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
+                          // Bolt icon
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
                               Icons.bolt_rounded,
@@ -119,85 +236,89 @@ class HostelDetailsScreen extends StatelessWidget {
                               color: Colors.white,
                             ),
                           ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              Scaffold.of(context).openEndDrawer();
-                            },
-                            icon: const Icon(
-                              Icons.menu_rounded,
-                              color: Colors.white,
-                            ),
-                          ),
                         ],
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Title
-                      Text(
-                        'Hostel Details',
-                        style: AppStyles.heading1.copyWith(
-                          color: Colors.white,
-                          fontSize: 28,
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
+                      // IconButton(
+                      //   onPressed: () {
+                      //     // If you later add a drawer, open it here
+                      //     // Scaffold.of(context).openEndDrawer();
+                      //   },
+                      //   icon: const Icon(
+                      //     Icons.menu_rounded,
+                      //     color: Colors.white,
+                      //   ),
+                      // ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Hostel Details',
+                    style: AppStyles.heading1.copyWith(
+                      color: Colors.white,
+                      fontSize: 26,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
 
-            // Content
+            // BODY
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Hostel Info Card
+                    // MAIN HOSTEL CARD (name, city, rating, reviews)
                     Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: AppStyles.cardDecoration,
+                      padding: const EdgeInsets.all(20),
+                      decoration: AppStyles.cardDecoration.copyWith(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(hostel.name, style: AppStyles.heading2),
-                          const SizedBox(height: 12),
+                          Text(
+                            _hostel.name,
+                            style: AppStyles.heading2.copyWith(fontSize: 22),
+                          ),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
                               const Icon(
                                 Icons.location_on_rounded,
-                                size: 20,
+                                size: 18,
                                 color: AppColors.primaryBlue,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                hostel.location,
+                                _cityName,
                                 style: AppStyles.body1.copyWith(
                                   color: AppColors.textGray,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          // Rating and Reviews
+                          const SizedBox(height: 24),
                           Row(
                             children: [
+                              // Rating
                               Expanded(
                                 child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Icon(
                                       Icons.star_rounded,
+                                      size: 28,
                                       color: Color(0xFFFCD34D),
-                                      size: 32,
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      hostel.rating.toString(),
-                                      style: AppStyles.heading2,
+                                      _hostel.rating.toStringAsFixed(1),
+                                      style: AppStyles.heading2.copyWith(
+                                        fontSize: 22,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -209,23 +330,29 @@ class HostelDetailsScreen extends StatelessWidget {
                                   ],
                                 ),
                               ),
+
                               Container(
                                 width: 1,
-                                height: 60,
+                                height: 48,
                                 color: AppColors.cardBackground,
                               ),
+
+                              // Reviews
                               Expanded(
                                 child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Icon(
-                                      Icons.rate_review_rounded,
+                                      Icons.edit_note_rounded,
+                                      size: 28,
                                       color: AppColors.primaryBlue,
-                                      size: 32,
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      hostel.reviews.toString(),
-                                      style: AppStyles.heading2,
+                                      _hostel.reviews.toString(),
+                                      style: AppStyles.heading2.copyWith(
+                                        fontSize: 22,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -245,20 +372,27 @@ class HostelDetailsScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // About Section
+                    // ABOUT CARD
                     Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: AppStyles.cardDecoration,
+                      padding: const EdgeInsets.all(20),
+                      decoration: AppStyles.cardDecoration.copyWith(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('About', style: AppStyles.heading3),
-                          const SizedBox(height: 12),
                           Text(
-                            hostel.about ?? 'No description available.',
+                            'About',
+                            style: AppStyles.heading3.copyWith(fontSize: 18),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            (_hostel.about ?? '').isEmpty
+                                ? 'No description available.'
+                                : _hostel.about!,
                             style: AppStyles.body1.copyWith(
-                              color: AppColors.textGray,
-                              height: 1.6,
+                              color: AppColors.textDark,
+                              height: 1.4,
                             ),
                           ),
                         ],
@@ -267,33 +401,62 @@ class HostelDetailsScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Amenities Section
+                    // AMENITIES CARD
                     Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: AppStyles.cardDecoration,
+                      padding: const EdgeInsets.all(32),
+                      decoration: AppStyles.cardDecoration.copyWith(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Amenities', style: AppStyles.heading3),
+                          Text(
+                            'Amenities',
+                            style: AppStyles.heading3.copyWith(fontSize: 18),
+                          ),
                           const SizedBox(height: 16),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 2.5,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
+                          Wrap(
+                            spacing: 14,
+                            runSpacing: 14,
+                            children: _hostel.amenities.map((a) {
+                              final label = _shortAmenityLabel(a);
+                              final icon = _amenityIcon(a);
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
                                 ),
-                            itemCount: hostel.amenities.length,
-                            itemBuilder: (context, index) {
-                              final amenity = hostel.amenities[index];
-                              return AmenityCard(
-                                amenity: amenity,
-                                icon: _getAmenityIcon(amenity),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlue.withOpacity(
+                                    0.06,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AppColors.primaryBlue.withOpacity(
+                                      0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      icon,
+                                      size: 18,
+                                      color: AppColors.primaryBlue,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      label,
+                                      style: AppStyles.body2.copyWith(
+                                        color: AppColors.primaryBlue,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               );
-                            },
+                            }).toList(),
                           ),
                         ],
                       ),
@@ -301,92 +464,75 @@ class HostelDetailsScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Features Section
+                    // FEATURES (green box)
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.statusSolved.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.statusSolved.withOpacity(0.2),
-                          width: 1,
-                        ),
+                        color: const Color(0xFFE9F9F0),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFBBE7C8)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const FeatureItem(
-                            text: 'Real-time complaint tracking',
-                          ),
-                          const FeatureItem(
-                            text: 'Quick response from management',
-                          ),
-                          const FeatureItem(text: '24/7 support system'),
-                        ],
+                        children: features.map((text) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF34C759),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check_rounded,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    text,
+                                    style: AppStyles.body1.copyWith(
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    // Already Joined or Report Problem Button
-                    if (hostel.isJoined) ...[
+                    // BOTTOM STATE: info + button
+                    if (!_isJoined) ...[
+                      // info banner
                       Container(
-                        padding: const EdgeInsets.all(20),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.statusSolved.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppColors.statusSolved.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              color: AppColors.statusSolved,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Already Joined',
-                              style: AppStyles.body1.copyWith(
-                                color: AppColors.statusSolved,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      CustomButton(
-                        text: 'Report a Problem',
-                        onPressed: () => _reportProblem(context),
-                        icon: const Icon(
-                          Icons.chat_bubble_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ] else ...[
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
+                          color: const Color(0xFFE7ECFF),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: AppColors.primaryBlue.withOpacity(0.3),
-                            width: 1,
                           ),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Icon(
                               Icons.info_rounded,
                               color: AppColors.primaryBlue,
-                              size: 24,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 'Join this hostel to report problems and track complaints',
@@ -398,9 +544,124 @@ class HostelDetailsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                    ],
+                      const SizedBox(height: 16),
 
-                    const SizedBox(height: 20),
+                      // Join Hostel button (gradient style)
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   child: Container(
+                      //     decoration: const BoxDecoration(
+                      //       gradient: AppColors.headerGradient,
+                      //       borderRadius: BorderRadius.all(Radius.circular(20)),
+                      //     ),
+                      //     child: ElevatedButton(
+                      //       onPressed: _joinHostel,
+                      //       style: ElevatedButton.styleFrom(
+                      //         backgroundColor: Colors.transparent,
+                      //         shadowColor: Colors.transparent,
+                      //         padding: const EdgeInsets.symmetric(vertical: 16),
+                      //         shape: RoundedRectangleBorder(
+                      //           borderRadius: BorderRadius.circular(20),
+                      //         ),
+                      //       ),
+                      //       child: Text(
+                      //         'Join Hostel',
+                      //         style: AppStyles.body1.copyWith(
+                      //           color: Colors.white,
+                      //           fontWeight: FontWeight.w600,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                    ] else ...[
+                      // Already joined banner
+                      // Container(
+                      //   width: double.infinity,
+                      //   padding: const EdgeInsets.all(16),
+                      //   decoration: BoxDecoration(
+                      //     color: const Color(0xFFE9F9F0),
+                      //     borderRadius: BorderRadius.circular(20),
+                      //     border: Border.all(color: const Color(0xFFBBE7C8)),
+                      //   ),
+                      //   child: Row(
+                      //     children: [
+                      //       const Icon(
+                      //         Icons.check_circle_rounded,
+                      //         color: Color(0xFF34C759),
+                      //       ),
+                      //       const SizedBox(width: 10),
+                      //       Text(
+                      //         'Already Joined',
+                      //         style: AppStyles.body1.copyWith(
+                      //           color: const Color(0xFF2E7D32),
+                      //           fontWeight: FontWeight.w600,
+                      //         ),
+                      //       ),
+                      //       const Spacer(),
+                      //       TextButton(
+                      //         onPressed: _exitHostel,
+                      //         child: Text(
+                      //           'Exit',
+                      //           style: AppStyles.body2.copyWith(
+                      //             color: AppColors.error,
+                      //             fontWeight: FontWeight.w600,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
+                      const SizedBox(height: 16),
+
+                      // Report a Problem button
+                      SizedBox(
+                        width: double.infinity,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: AppColors.headerGradient,
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      PostComplaintScreen(hostel: _hostel),
+                                ),
+                              );
+                            },
+
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.chat_bubble_outline_rounded,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Report a Problem  →',
+                                  style: AppStyles.body1.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

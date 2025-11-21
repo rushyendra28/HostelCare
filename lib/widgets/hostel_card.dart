@@ -17,8 +17,20 @@ class HostelCard extends StatelessWidget {
     this.showExitMessage = false,
   }) : super(key: key);
 
+  String get cityName {
+    try {
+      final parts = hostel.location.split(',');
+      if (parts.length >= 4) return parts[3].trim();
+      return hostel.location;
+    } catch (_) {
+      return hostel.location;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isJoined = hostel.isJoined;
+
     return GestureDetector(
       onTap: onCardTap,
       child: Container(
@@ -28,18 +40,18 @@ class HostelCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // TOP ROW
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hostel Info
+                // NAME + CITY
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         hostel.name,
-                        style: AppStyles.heading3,
+                        style: AppStyles.heading3.copyWith(fontSize: 20),
                       ),
                       const SizedBox(height: 8),
                       Row(
@@ -51,7 +63,7 @@ class HostelCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            hostel.location,
+                            cityName,
                             style: AppStyles.body2.copyWith(
                               color: AppColors.textGray,
                             ),
@@ -64,24 +76,24 @@ class HostelCard extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
-                // Join/Joined Button
-                _buildActionButton(context),
+                // JOIN BUTTON / JOINED BADGE / DISABLED JOIN
+                _buildJoinSection(isJoined),
               ],
             ),
 
             const SizedBox(height: 12),
 
-            // Rating and Reviews
+            // RATING
             Row(
               children: [
                 const Icon(
                   Icons.star_rounded,
-                  color: Color(0xFFFCD34D),
+                  color: Color(0xFFFFC107),
                   size: 20,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  hostel.rating.toString(),
+                  hostel.rating.toStringAsFixed(1),
                   style: AppStyles.body1.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textDark,
@@ -89,16 +101,14 @@ class HostelCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  '${hostel.reviews} reviews',
-                  style: AppStyles.body2.copyWith(
-                    color: AppColors.textGray,
-                  ),
+                  "${hostel.reviews} reviews",
+                  style: AppStyles.body2.copyWith(color: AppColors.textGray),
                 ),
               ],
             ),
 
-            // Exit message for joined hostels
-            if (showExitMessage && !hostel.isJoined) ...[
+            // RED "EXIT TO JOIN" MESSAGE
+            if (showExitMessage && !isJoined) ...[
               const SizedBox(height: 12),
               Text(
                 'Exit your current hostel to join this one',
@@ -114,49 +124,47 @@ class HostelCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context) {
-    if (hostel.isJoined) {
+  // 🔵  JOIN / JOINED / DISABLED BUTTON BUILDER
+  Widget _buildJoinSection(bool isJoined) {
+    // 🟢 JOINED badge + exit link
+    if (isJoined) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // Joined badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.statusSolved.withOpacity(0.1),
+              color: const Color(0xFFDFF8E7),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  size: 16,
-                  color: AppColors.statusSolved,
-                ),
-                const SizedBox(width: 4),
+              children: const [
+                Icon(Icons.check_circle, color: Color(0xFF2ECC71), size: 18),
+                SizedBox(width: 6),
                 Text(
-                  'Joined',
-                  style: AppStyles.caption.copyWith(
-                    color: AppColors.statusSolved,
+                  "Joined",
+                  style: TextStyle(
+                    color: Color(0xFF2ECC71),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
+
           const SizedBox(height: 8),
+
+          // Exit hostel small link
           InkWell(
             onTap: onJoinPressed,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                'Exit hostel',
-                style: AppStyles.caption.copyWith(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.w600,
-                  decoration: TextDecoration.underline,
-                ),
+            child: Text(
+              'Exit hostel',
+              style: AppStyles.caption.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
               ),
             ),
           ),
@@ -164,26 +172,38 @@ class HostelCard extends StatelessWidget {
       );
     }
 
-    return ElevatedButton(
-      onPressed: showExitMessage ? null : onJoinPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: showExitMessage 
-            ? AppColors.textLight.withOpacity(0.3)
-            : AppColors.primaryBlue,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
+    // ❌ Disabled join button (grey)
+    if (showExitMessage) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 0,
-        disabledBackgroundColor: AppColors.textLight.withOpacity(0.3),
-        disabledForegroundColor: Colors.white,
-      ),
-      child: Text(
-        'Join',
-        style: AppStyles.body2.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
+        child: const Text(
+          "Join",
+          style: TextStyle(
+            color: Color(0xFF9CA3AF), // light grey text
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
+    // 🔷 Normal active join button
+    return InkWell(
+      onTap: onJoinPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6A82FB), Color(0xFF4E67EB)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text(
+          "Join",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
     );

@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
 import '../../models/complaint.dart';
+import '../../models/hostel.dart';
+import '../../data/hostel_data.dart';
 import '../../widgets/custom_button.dart';
 import 'package:intl/intl.dart';
 
 class AdminComplaintDetailsScreen extends StatefulWidget {
   final Complaint complaint;
+  final VoidCallback onStatusChanged;
 
   const AdminComplaintDetailsScreen({
     Key? key,
     required this.complaint,
+    required this.onStatusChanged,
   }) : super(key: key);
 
   @override
@@ -23,35 +27,48 @@ class _AdminComplaintDetailsScreenState
   late ComplaintStatus _selectedStatus;
   bool _isSaving = false;
 
+  Hostel? _hostel;
+
   @override
   void initState() {
     super.initState();
     _selectedStatus = widget.complaint.status;
+
+    // 🔥 Correctly map complaint.hostelId → actual hostel
+    _hostel = globalHostels.firstWhere(
+      (h) => h.id == widget.complaint.hostelId,
+      orElse: () => Hostel(
+        id: "UNKNOWN",
+        name: "Unknown Hostel",
+        location: "",
+        rating: 0.0,
+        reviews: 0,
+        isJoined: false,
+      ),
+    );
   }
 
   Future<void> _saveChanges() async {
-    setState(() {
-      _isSaving = true;
-    });
+    setState(() => _isSaving = true);
+    await Future.delayed(const Duration(seconds: 1));
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    widget.complaint.status = _selectedStatus;
 
-    setState(() {
-      _isSaving = false;
-    });
+    setState(() => _isSaving = false);
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Status updated successfully'),
-          backgroundColor: AppColors.statusSolved,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    widget.onStatusChanged(); // 🔥 Update AdminDashboard
 
-      Navigator.pop(context);
-    }
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Status updated successfully'),
+        backgroundColor: AppColors.statusSolved,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    Navigator.pop(context);
   }
 
   @override
@@ -60,48 +77,22 @@ class _AdminComplaintDetailsScreenState
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Header with gradient
           Container(
-            decoration: const BoxDecoration(
-              gradient: AppColors.headerGradient,
-            ),
+            decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
               bottom: false,
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    // App Bar
                     Row(
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_back_rounded,
-                              color: Colors.white,
-                            ),
-                          ),
+                          icon: _buildBackIcon(),
                         ),
                         const SizedBox(width: 12),
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.bolt_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
+                        _buildLogo(),
                         const SizedBox(width: 12),
                         Text(
                           'HostelCare Admin',
@@ -111,10 +102,7 @@ class _AdminComplaintDetailsScreenState
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 24),
-
-                    // Title
                     Text(
                       'Complaint Details',
                       style: AppStyles.heading1.copyWith(
@@ -122,7 +110,6 @@ class _AdminComplaintDetailsScreenState
                         fontSize: 28,
                       ),
                     ),
-
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -130,138 +117,18 @@ class _AdminComplaintDetailsScreenState
             ),
           ),
 
-          // Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Guest Info Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: AppStyles.cardDecoration,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Guest Name',
-                                style: AppStyles.caption.copyWith(
-                                  color: AppColors.textGray,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.complaint.guestName,
-                                style: AppStyles.heading3.copyWith(fontSize: 18),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
+                  _guestCard(),
+                  const SizedBox(height: 16),
+                  _detailsCard(),
                   const SizedBox(height: 16),
 
-                  // Details Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: AppStyles.cardDecoration,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Room',
-                                style: AppStyles.caption.copyWith(
-                                  color: AppColors.textGray,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_rounded,
-                                    size: 18,
-                                    color: AppColors.primaryBlue,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    widget.complaint.roomNumber,
-                                    style: AppStyles.heading3.copyWith(
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: AppColors.cardBackground,
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Submitted',
-                                style: AppStyles.caption.copyWith(
-                                  color: AppColors.textGray,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today_rounded,
-                                    size: 18,
-                                    color: AppColors.primaryBlue,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      DateFormat('MMM d, yyyy')
-                                          .format(widget.complaint.submittedDate),
-                                      style: AppStyles.body1.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Problem Title Card
+                  /// 🔥 NEW — HOSTEL NAME CARD
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: AppStyles.cardDecoration,
@@ -269,142 +136,36 @@ class _AdminComplaintDetailsScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.complaint.title,
-                          style: AppStyles.heading3,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Description Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: AppStyles.cardDecoration,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Description',
-                          style: AppStyles.body1.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          widget.complaint.description,
-                          style: AppStyles.body1.copyWith(
+                          "Hostel",
+                          style: AppStyles.caption.copyWith(
                             color: AppColors.textGray,
-                            height: 1.6,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Attached Photo
-                  if (widget.complaint.photoUrl != null)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: AppStyles.cardDecoration,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Attached Photo',
-                            style: AppStyles.body1.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            height: 150,
-                            decoration: BoxDecoration(
-                              color: AppColors.cardBackground,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.image_rounded,
-                                    color: AppColors.primaryBlue,
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Photo attached',
-                                    style: AppStyles.body2.copyWith(
-                                      color: AppColors.primaryBlue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  const SizedBox(height: 20),
-
-                  // Update Status Section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: AppStyles.cardDecoration,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                        const SizedBox(height: 6),
                         Text(
-                          'Update Status',
+                          _hostel?.name ?? "Unknown Hostel",
                           style: AppStyles.body1.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textDark,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        _StatusOption(
-                          status: ComplaintStatus.viewed,
-                          isSelected: _selectedStatus == ComplaintStatus.viewed,
-                          onTap: () {
-                            setState(() {
-                              _selectedStatus = ComplaintStatus.viewed;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _StatusOption(
-                          status: ComplaintStatus.inProgress,
-                          isSelected: _selectedStatus == ComplaintStatus.inProgress,
-                          onTap: () {
-                            setState(() {
-                              _selectedStatus = ComplaintStatus.inProgress;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _StatusOption(
-                          status: ComplaintStatus.solved,
-                          isSelected: _selectedStatus == ComplaintStatus.solved,
-                          onTap: () {
-                            setState(() {
-                              _selectedStatus = ComplaintStatus.solved;
-                            });
-                          },
-                        ),
                       ],
                     ),
                   ),
 
+                  const SizedBox(height: 20),
+                  _titleCard(),
+                  const SizedBox(height: 20),
+                  _descriptionCard(),
+
+                  if (widget.complaint.photoUrl != null)
+                    const SizedBox(height: 20),
+                  if (widget.complaint.photoUrl != null) _photoCard(),
+
+                  const SizedBox(height: 20),
+                  _statusSelector(),
                   const SizedBox(height: 24),
 
-                  // Save Button
                   CustomButton(
                     text: 'Save Changes',
                     onPressed: _saveChanges,
@@ -415,7 +176,6 @@ class _AdminComplaintDetailsScreenState
                       size: 20,
                     ),
                   ),
-
                   const SizedBox(height: 20),
                 ],
               ),
@@ -425,6 +185,226 @@ class _AdminComplaintDetailsScreenState
       ),
     );
   }
+
+  Widget _buildBackIcon() => Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+  );
+
+  Widget _buildLogo() => Container(
+    width: 48,
+    height: 48,
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: const Icon(Icons.bolt_rounded, color: Colors.white),
+  );
+
+  Widget _guestCard() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: AppStyles.cardDecoration,
+    child: Row(
+      children: [
+        _iconContainer(),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Guest Name',
+                style: AppStyles.caption.copyWith(color: AppColors.textGray),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.complaint.guestName,
+                style: AppStyles.heading3.copyWith(fontSize: 18),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _iconContainer() => Container(
+    width: 56,
+    height: 56,
+    decoration: BoxDecoration(
+      gradient: AppColors.primaryGradient,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
+  );
+
+  Widget _detailsCard() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: AppStyles.cardDecoration,
+    child: Row(children: [_roomColumn(), _divider(), _submittedColumn()]),
+  );
+
+  Widget _roomColumn() => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Room",
+          style: AppStyles.caption.copyWith(color: AppColors.textGray),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            const Icon(
+              Icons.location_on_rounded,
+              size: 18,
+              color: AppColors.primaryBlue,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              widget.complaint.roomNumber,
+              style: AppStyles.heading3.copyWith(fontSize: 20),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _divider() =>
+      Container(width: 1, height: 40, color: AppColors.cardBackground);
+
+  Widget _submittedColumn() => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Submitted",
+          style: AppStyles.caption.copyWith(color: AppColors.textGray),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            const Icon(
+              Icons.calendar_today_rounded,
+              size: 18,
+              color: AppColors.primaryBlue,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                DateFormat(
+                  'MMM d, yyyy',
+                ).format(widget.complaint.submittedDate),
+                style: AppStyles.body1.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _titleCard() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: AppStyles.cardDecoration,
+    child: Text(widget.complaint.title, style: AppStyles.heading3),
+  );
+
+  Widget _descriptionCard() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: AppStyles.cardDecoration,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Description",
+          style: AppStyles.body1.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          widget.complaint.description,
+          style: AppStyles.body1.copyWith(
+            color: AppColors.textGray,
+            height: 1.6,
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _photoCard() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: AppStyles.cardDecoration,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Attached Photo',
+          style: AppStyles.body1.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.image_rounded,
+              color: AppColors.primaryBlue,
+              size: 48,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _statusSelector() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: AppStyles.cardDecoration,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Update Status',
+          style: AppStyles.body1.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildOption(ComplaintStatus.viewed),
+        const SizedBox(height: 12),
+        _buildOption(ComplaintStatus.inProgress),
+        const SizedBox(height: 12),
+        _buildOption(ComplaintStatus.solved),
+      ],
+    ),
+  );
+
+  Widget _buildOption(ComplaintStatus status) => _StatusOption(
+    status: status,
+    isSelected: _selectedStatus == status,
+    onTap: () {
+      setState(() {
+        _selectedStatus = status;
+      });
+    },
+  );
 }
 
 class _StatusOption extends StatelessWidget {
@@ -433,7 +413,7 @@ class _StatusOption extends StatelessWidget {
   final VoidCallback onTap;
 
   const _StatusOption({
-    Key? key,  // ✅ Correct
+    Key? key,
     required this.status,
     required this.isSelected,
     required this.onTap,
@@ -506,11 +486,7 @@ class _StatusOption extends StatelessWidget {
                 color: backgroundColor,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20,
-              ),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(

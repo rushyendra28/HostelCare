@@ -5,6 +5,7 @@ import '../../core/constants/app_styles.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../onboarding/onboarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -16,6 +17,11 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  Future<void> _saveName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("username", _nameController.text.trim());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,11 +74,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
                 const SizedBox(height: 32),
 
-                // Welcome Text
                 Text(AppStrings.welcome, style: AppStyles.heading1),
-
                 const SizedBox(height: 8),
-
                 Text(
                   AppStrings.enterNameToContinue,
                   style: AppStyles.body1,
@@ -81,7 +84,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
                 const SizedBox(height: 40),
 
-                // Name Input
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -108,22 +110,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
                 const SizedBox(height: 32),
 
-                // Continue Button
-                // In the CustomButton onPressed callback, replace the comment with:
-CustomButton(
-  text: AppStrings.continueText,
-  onPressed: () {
-    if (_formKey.currentState!.validate()) {
-      // Save name to local storage here if needed
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const OnboardingScreen(),
-        ),
-      );
-    }
-  },
-),
+                CustomButton(
+                  text: AppStrings.continueText,
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      await _saveName();
+
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const OnboardingScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
 
                 const Spacer(),
               ],

@@ -4,7 +4,6 @@ import '../../core/constants/app_styles.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
 import 'admin_dashboard_screen.dart';
-import 'admin_signup_screen.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({Key? key}) : super(key: key);
@@ -15,7 +14,7 @@ class AdminLoginScreen extends StatefulWidget {
 
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailController = TextEditingController(text: "admin@hostelcare.com");
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -33,17 +32,31 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         _isLoading = true;
       });
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 1));
 
       setState(() {
         _isLoading = false;
       });
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      // Hardcoded admin credentials
+      if (email == "admin@hostelcare.com" && password == "Admin@2525") {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AdminDashboardScreen(),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.red,
+            content: Text("Invalid admin email or password"),
+          ),
         );
       }
     }
@@ -85,9 +98,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                 const SizedBox(height: 40),
 
-                // Title
                 Text('Admin Login', style: AppStyles.heading1),
-
                 const SizedBox(height: 8),
 
                 Text(
@@ -97,13 +108,14 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                 const SizedBox(height: 48),
 
-                // Email Field
+                // Login Card
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: AppStyles.cardDecoration,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /// EMAIL FIELD
                       Text(
                         'Email Address',
                         style: AppStyles.body1.copyWith(
@@ -117,7 +129,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         style: AppStyles.body1,
                         decoration: InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: 'Enter Admin Email',
                           hintStyle: AppStyles.body1.copyWith(
                             color: AppColors.textLight,
                           ),
@@ -149,7 +161,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                       const SizedBox(height: 20),
 
-                      // Password Field
+                      /// PASSWORD FIELD
                       Text(
                         'Password',
                         style: AppStyles.body1.copyWith(
@@ -208,13 +220,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Forgot Password
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {
-                            // Handle forgot password
-                          },
+                          onPressed: () {},
                           child: Text(
                             'Forgot Password?',
                             style: AppStyles.body2.copyWith(
@@ -230,7 +239,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                 const SizedBox(height: 32),
 
-                // Login Button
+                /// LOGIN BUTTON
                 CustomButton(
                   text: 'Login',
                   onPressed: _login,
@@ -243,43 +252,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-                // Sign Up Link
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: AppStyles.body2.copyWith(
-                          color: AppColors.textGray,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AdminSignUpScreen(),
-                            ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Sign Up',
-                          style: AppStyles.body2.copyWith(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

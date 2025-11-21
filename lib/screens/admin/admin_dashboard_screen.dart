@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
 import '../../models/complaint.dart';
+import '../../models/hostel.dart';
+import '../../data/hostel_data.dart';
 import '../../widgets/complaint_card.dart';
 import 'admin_complaint_details_screen.dart';
+import '../hostel/add_hostel_screen.dart';
+import '../../data/complaint_data.dart';
+import '../../extensions/complaint_sort_extension.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -13,80 +18,91 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  // Sample complaints data
-  final List<Complaint> _complaints = [
+  String _selectedHostelId = "ALL";
+
+  // sample complaints + global
+  final List<Complaint> _sampleComplaints = [
     Complaint(
       id: '1',
       title: 'Water leakage in bathroom',
-      description:
-          'The bathroom ceiling has a water leak that drips constantly.',
+      description: 'Bathroom ceiling leaks constantly.',
       guestName: 'Ramesh Kumar',
       roomNumber: '204',
-      submittedDate: DateTime(2025, 11, 12),
+      submittedDate: DateTime(2025, 11, 12, 8, 30),
       status: ComplaintStatus.inProgress,
+      photoUrl: null,
+      hostelId: "SAMPLE_H1",
     ),
     Complaint(
       id: '2',
-      title: 'AC not working properly',
-      description: 'The air conditioner in my room is not cooling.',
+      title: 'AC not working',
+      description: 'The AC is not cooling properly.',
       guestName: 'Priya Sharma',
       roomNumber: '301',
-      submittedDate: DateTime(2025, 11, 10),
+      submittedDate: DateTime(2025, 11, 10, 19, 45),
       status: ComplaintStatus.viewed,
-    ),
-    Complaint(
-      id: '3',
-      title: 'WiFi connection issue',
-      description: 'Unable to connect to WiFi for the past two days.',
-      guestName: 'Amit Patel',
-      roomNumber: '105',
-      submittedDate: DateTime(2025, 11, 8),
-      status: ComplaintStatus.solved,
-    ),
-    Complaint(
-      id: '4',
-      title: 'Broken window lock',
-      description: 'The window lock in my room is broken and needs repair.',
-      guestName: 'Ramesh Kumar',
-      roomNumber: '204',
-      submittedDate: DateTime(2025, 11, 5),
-      status: ComplaintStatus.solved,
-    ),
-    Complaint(
-      id: '5',
-      title: 'Noisy AC unit',
-      description: 'The AC makes loud noise throughout the night.',
-      guestName: 'Sneha Reddy',
-      roomNumber: '402',
-      submittedDate: DateTime(2025, 11, 4),
-      status: ComplaintStatus.inProgress,
-    ),
-    Complaint(
-      id: '6',
-      title: 'Light not working',
-      description: 'Main ceiling light not functioning.',
-      guestName: 'Vikram Singh',
-      roomNumber: '210',
-      submittedDate: DateTime(2025, 11, 2),
-      status: ComplaintStatus.viewed,
+      photoUrl: null,
+      hostelId: "SAMPLE_H2",
     ),
   ];
 
-  int get _totalComplaints => _complaints.length;
-  int get _viewedComplaints =>
-      _complaints.where((c) => c.status == ComplaintStatus.viewed).length;
-  int get _inProgressComplaints =>
-      _complaints.where((c) => c.status == ComplaintStatus.inProgress).length;
-  int get _solvedComplaints =>
-      _complaints.where((c) => c.status == ComplaintStatus.solved).length;
+  List<Complaint> get _allComplaints => [
+    ..._sampleComplaints,
+    ...globalComplaints,
+  ];
 
-  void _navigateToComplaintDetails(Complaint complaint) {
-    Navigator.push(
+  List<Complaint> get _filteredComplaints {
+    if (_selectedHostelId == "ALL") {
+      return SortedComplaints(_allComplaints).sortedByDate();
+    }
+
+    return SortedComplaints(
+          _allComplaints.where((c) => c.hostelId == _selectedHostelId).toList(),
+        ) // <-- REQUIRED
+        .sortedByDate();
+  }
+
+  int get _totalComplaints => _filteredComplaints.length;
+
+  int get _viewedComplaints => _filteredComplaints
+      .where((c) => c.status == ComplaintStatus.viewed)
+      .length;
+
+  int get _inProgressComplaints => _filteredComplaints
+      .where((c) => c.status == ComplaintStatus.inProgress)
+      .length;
+
+  int get _solvedComplaints => _filteredComplaints
+      .where((c) => c.status == ComplaintStatus.solved)
+      .length;
+
+  void _navigateToComplaintDetails(Complaint complaint) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AdminComplaintDetailsScreen(complaint: complaint),
+        builder: (context) => AdminComplaintDetailsScreen(
+          complaint: complaint,
+          onStatusChanged: () => setState(() {}),
+        ),
       ),
     );
+  }
+
+  void _openAddHostel() async {
+    final Hostel? newHostel = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddHostelScreen()),
+    );
+
+    if (newHostel != null) {
+      setState(() => globalHostels.add(newHostel));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Hostel added successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   @override
@@ -95,7 +111,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Header with gradient
+          // HEADER
           Container(
             decoration: const BoxDecoration(gradient: AppColors.headerGradient),
             child: SafeArea(
@@ -105,8 +121,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // App Bar
+                    // TOP BAR
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
@@ -123,32 +140,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
+                        ElevatedButton.icon(
+                          onPressed: _openAddHostel,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primaryBlue,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.bolt_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'HostelCare Admin',
-                          style: AppStyles.heading3.copyWith(
-                            color: Colors.white,
-                          ),
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text("Add Hostel"),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // Title
                     Text(
                       'Admin Dashboard',
                       style: AppStyles.heading1.copyWith(
@@ -156,16 +169,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         fontSize: 28,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       'Manage all hostel complaints',
                       style: AppStyles.body1.copyWith(
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
-
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -173,21 +183,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
 
-          // Content
+          // BODY
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Statistics Cards - FIXED
+                  /// STATS GRID
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.3, // ✅ Changed from 1.3 to 1.5
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 1.1,
                     children: [
                       _StatCard(
                         icon: Icons.trending_up_rounded,
@@ -226,26 +236,138 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 10),
 
-                  // All Complaints Section
-                  Text('All Complaints', style: AppStyles.heading3),
-
-                  const SizedBox(height: 16),
-
-                  // Complaints List
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _complaints.length,
-                    itemBuilder: (context, index) {
-                      final complaint = _complaints[index];
-                      return ComplaintCard(
-                        complaint: complaint,
-                        onTap: () => _navigateToComplaintDetails(complaint),
-                      );
-                    },
+                  //dropdown
+                  Row(
+                    children: [
+                      // Expanded(
+                      //   child: Text(
+                      //     'Filter by Hostel',
+                      //     style: AppStyles.heading3,
+                      //     overflow: TextOverflow.ellipsis,
+                      //   ),
+                      // ),
+                      // const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.cardBackground),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedHostelId,
+                            items: [
+                              const DropdownMenuItem(
+                                value: "ALL",
+                                child: Text("All Hostels"),
+                              ),
+                              ...globalHostels.map(
+                                (hostel) => DropdownMenuItem(
+                                  value: hostel.id,
+                                  child: Text(hostel.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() => _selectedHostelId = value!);
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+
+                  const SizedBox(height: 10),
+
+                  /// COMPLAINTS HEADER + DROPDOWN
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Complaints',
+                          style: AppStyles.heading3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.cardBackground),
+                        ),
+                        // child: DropdownButtonHideUnderline(
+                        //   child: DropdownButton<String>(
+                        //     value: _selectedHostelId,
+                        //     items: [
+                        //       const DropdownMenuItem(
+                        //         value: "ALL",
+                        //         child: Text("All Hostels"),
+                        //       ),
+                        //       ...globalHostels.map(
+                        //         (hostel) => DropdownMenuItem(
+                        //           value: hostel.id,
+                        //           child: Text(hostel.name),
+                        //         ),
+                        //       ),
+                        //     ],
+                        //     onChanged: (value) {
+                        //       setState(() => _selectedHostelId = value!);
+                        //     },
+                        //   ),
+                        // ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// EMPTY STATE HANDLING
+                  if (_filteredComplaints.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 40),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.inbox_rounded,
+                            size: 80,
+                            color: AppColors.textLight,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No complaints for this hostel',
+                            style: AppStyles.body1.copyWith(
+                              color: AppColors.textGray,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  /// COMPLAINT LIST
+                  if (_filteredComplaints.isNotEmpty)
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _filteredComplaints.length,
+                      itemBuilder: (context, index) {
+                        final complaint = _filteredComplaints[index];
+                        return ComplaintCard(
+                          complaint: complaint,
+                          onTap: () => _navigateToComplaintDetails(complaint),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -256,7 +378,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 }
 
-// ✅ FIXED _StatCard Widget
+extension SortedComplaints on List<Complaint> {
+  List<Complaint> sortedByDate() {
+    return List.from(this)
+      ..sort((a, b) => b.submittedDate.compareTo(a.submittedDate));
+  }
+}
+
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -265,65 +393,38 @@ class _StatCard extends StatelessWidget {
   final Color backgroundColor;
 
   const _StatCard({
-    Key? key,
     required this.icon,
     required this.iconColor,
     required this.count,
     required this.label,
     required this.backgroundColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16), // ✅ Reduced from 20 to 16
+      padding: const EdgeInsets.all(16),
       decoration: AppStyles.cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ Added
         children: [
           Container(
-            width: 44, // ✅ Reduced from 48 to 44
-            height: 44, // ✅ Reduced from 48 to 44
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 22, // ✅ Reduced from 24 to 22
-            ),
+            child: Icon(icon, color: iconColor),
           ),
-          const SizedBox(height: 4), // ✅ Added small spacing
-          Flexible(
-            // ✅ Wrapped in Flexible to prevent overflow
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FittedBox(
-                  // ✅ Added FittedBox for count
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    count,
-                    style: AppStyles.heading1.copyWith(
-                      fontSize: 28, // ✅ Reduced from 32 to 28
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 2), // ✅ Reduced from 4 to 2
-                Text(
-                  label,
-                  style: AppStyles.caption.copyWith(
-                    color: AppColors.textGray,
-                    fontSize: 11, // ✅ Added explicit font size
-                  ),
-                  maxLines: 2, // ✅ Allow wrapping to 2 lines
-                  overflow: TextOverflow.ellipsis, // ✅ Handle overflow
-                ),
-              ],
+          const SizedBox(height: 6),
+          Text(count, style: AppStyles.heading1.copyWith(fontSize: 28)),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: AppStyles.caption.copyWith(
+              color: AppColors.textGray,
+              fontSize: 11,
             ),
           ),
         ],
