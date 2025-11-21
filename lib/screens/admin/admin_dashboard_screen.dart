@@ -21,33 +21,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String _selectedHostelId = "ALL";
 
   // sample complaints + global
-  final List<Complaint> _sampleComplaints = [
-    Complaint(
-      id: '1',
-      title: 'Water leakage in bathroom',
-      description: 'Bathroom ceiling leaks constantly.',
-      guestName: 'Ramesh Kumar',
-      roomNumber: '204',
-      submittedDate: DateTime(2025, 11, 12, 8, 30),
-      status: ComplaintStatus.inProgress,
-      photoUrl: null,
-      hostelId: "SAMPLE_H1",
-    ),
-    Complaint(
-      id: '2',
-      title: 'AC not working',
-      description: 'The AC is not cooling properly.',
-      guestName: 'Priya Sharma',
-      roomNumber: '301',
-      submittedDate: DateTime(2025, 11, 10, 19, 45),
-      status: ComplaintStatus.viewed,
-      photoUrl: null,
-      hostelId: "SAMPLE_H2",
-    ),
-  ];
+  // final List<Complaint> _sampleComplaints = [
+  //   Complaint(
+  //     id: '1',
+  //     title: 'Water leakage in bathroom',
+  //     description: 'Bathroom ceiling leaks constantly.',
+  //     guestName: 'Ramesh Kumar',
+  //     roomNumber: '204',
+  //     submittedDate: DateTime(2025, 11, 12, 8, 30),
+  //     status: ComplaintStatus.inProgress,
+  //     photoUrl: null,
+  //     hostelId: "SAMPLE_H1",
+  //   ),
+  //   Complaint(
+  //     id: '2',
+  //     title: 'AC not working',
+  //     description: 'The AC is not cooling properly.',
+  //     guestName: 'Priya Sharma',
+  //     roomNumber: '301',
+  //     submittedDate: DateTime(2025, 11, 10, 19, 45),
+  //     status: ComplaintStatus.viewed,
+  //     photoUrl: null,
+  //     hostelId: "SAMPLE_H2",
+  //   ),
+  // ];
 
   List<Complaint> get _allComplaints => [
-    ..._sampleComplaints,
+    // ..._sampleComplaints,
     ...globalComplaints,
   ];
 

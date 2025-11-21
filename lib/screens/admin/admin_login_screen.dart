@@ -220,19 +220,19 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                       const SizedBox(height: 12),
 
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Forgot Password?',
-                            style: AppStyles.body2.copyWith(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
+                      // Align(
+                      //   alignment: Alignment.centerRight,
+                      //   child: TextButton(
+                      //     onPressed: () {},
+                      //     child: Text(
+                      //       'Forgot Password?',
+                      //       style: AppStyles.body2.copyWith(
+                      //         color: AppColors.primaryBlue,
+                      //         fontWeight: FontWeight.w600,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
