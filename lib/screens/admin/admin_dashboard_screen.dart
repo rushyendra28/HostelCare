@@ -6,7 +6,7 @@ import '../../models/hostel.dart';
 import '../../data/hostel_data.dart';
 import '../../widgets/complaint_card.dart';
 import 'admin_complaint_details_screen.dart';
-import '../hostel/add_hostel_screen.dart';
+import 'add_hostel_screen.dart';
 import '../../data/complaint_data.dart';
 import '../../extensions/complaint_sort_extension.dart';
 
@@ -20,34 +20,122 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String _selectedHostelId = "ALL";
 
-  // sample complaints + global
-  // final List<Complaint> _sampleComplaints = [
-  //   Complaint(
-  //     id: '1',
-  //     title: 'Water leakage in bathroom',
-  //     description: 'Bathroom ceiling leaks constantly.',
-  //     guestName: 'Ramesh Kumar',
-  //     roomNumber: '204',
-  //     submittedDate: DateTime(2025, 11, 12, 8, 30),
-  //     status: ComplaintStatus.inProgress,
-  //     photoUrl: null,
-  //     hostelId: "SAMPLE_H1",
-  //   ),
-  //   Complaint(
-  //     id: '2',
-  //     title: 'AC not working',
-  //     description: 'The AC is not cooling properly.',
-  //     guestName: 'Priya Sharma',
-  //     roomNumber: '301',
-  //     submittedDate: DateTime(2025, 11, 10, 19, 45),
-  //     status: ComplaintStatus.viewed,
-  //     photoUrl: null,
-  //     hostelId: "SAMPLE_H2",
-  //   ),
-  // ];
+  //sample complaints + global
+  final List<Complaint> _sampleComplaints = [
+    Complaint(
+      id: '1',
+      title: 'Water leakage in bathroom',
+      description: 'Bathroom ceiling leaks constantly.',
+      guestName: 'Ramesh Kumar',
+      roomNumber: '204',
+      submittedDate: DateTime(2025, 11, 12, 8, 30),
+      status: ComplaintStatus.inProgress,
+      photoUrl: null,
+      hostelId: "SAMPLE_H1",
+    ),
+    Complaint(
+      id: '2',
+      title: 'AC not working',
+      description: 'The AC is not cooling properly.',
+      guestName: 'Priya Sharma',
+      roomNumber: '301',
+      submittedDate: DateTime(2025, 11, 10, 19, 45),
+      status: ComplaintStatus.viewed,
+      photoUrl: null,
+      hostelId: "SAMPLE_H2",
+    ),
+    Complaint(
+      id: '3',
+      title: 'WiFi connectivity issue',
+      description: 'Internet disconnects frequently.',
+      guestName: 'Amit Verma',
+      roomNumber: '112',
+      submittedDate: DateTime(2025, 11, 9, 14, 10),
+      status: ComplaintStatus.solved,
+      photoUrl: null,
+      hostelId: "SAMPLE_H1",
+    ),
+    Complaint(
+      id: '4',
+      title: 'Broken bed frame',
+      description: 'The bed frame is loose and making noise.',
+      guestName: 'Sneha Reddy',
+      roomNumber: '405',
+      submittedDate: DateTime(2025, 11, 8, 18, 20),
+      status: ComplaintStatus.inProgress,
+      photoUrl: null,
+      hostelId: "SAMPLE_H3",
+    ),
+    Complaint(
+      id: '5',
+      title: 'Food quality issue',
+      description: 'Dinner quality has been poor for 3 days.',
+      guestName: 'Rahul Singh',
+      roomNumber: '102',
+      submittedDate: DateTime(2025, 11, 11, 12, 45),
+      status: ComplaintStatus.inProgress,
+      photoUrl: null,
+      hostelId: "SAMPLE_H1",
+    ),
+    Complaint(
+      id: '6',
+      title: 'Power socket not working',
+      description: 'Charging point is completely dead.',
+      guestName: 'Anjali Gupta',
+      roomNumber: '509',
+      submittedDate: DateTime(2025, 11, 7, 9, 50),
+      status: ComplaintStatus.viewed,
+      photoUrl: null,
+      hostelId: "SAMPLE_H2",
+    ),
+    Complaint(
+      id: '7',
+      title: 'Fan making noise',
+      description: 'Ceiling fan makes loud noise at night.',
+      guestName: 'Vikram Chauhan',
+      roomNumber: '318',
+      submittedDate: DateTime(2025, 11, 10, 21, 15),
+      status: ComplaintStatus.viewed,
+      photoUrl: null,
+      hostelId: "SAMPLE_H3",
+    ),
+    Complaint(
+      id: '8',
+      title: 'Bathrooms not cleaned',
+      description: 'Common washroom has not been cleaned today.',
+      guestName: 'Megha Nair',
+      roomNumber: 'G-12',
+      submittedDate: DateTime(2025, 11, 12, 7, 20),
+      status: ComplaintStatus.inProgress,
+      photoUrl: null,
+      hostelId: "SAMPLE_H4",
+    ),
+    Complaint(
+      id: '9',
+      title: 'Room door jammed',
+      description: 'Door gets stuck and is hard to open.',
+      guestName: 'Karan Mehta',
+      roomNumber: '207',
+      submittedDate: DateTime(2025, 11, 6, 15, 40),
+      status: ComplaintStatus.solved,
+      photoUrl: null,
+      hostelId: "SAMPLE_H2",
+    ),
+    Complaint(
+      id: '10',
+      title: 'Mattress is uncomfortable',
+      description: 'The mattress has sunk in the middle.',
+      guestName: 'Divya Chauhan',
+      roomNumber: '412',
+      submittedDate: DateTime(2025, 11, 5, 11, 10),
+      status: ComplaintStatus.viewed,
+      photoUrl: null,
+      hostelId: "SAMPLE_H1",
+    ),
+  ];
 
   List<Complaint> get _allComplaints => [
-    // ..._sampleComplaints,
+    ..._sampleComplaints,
     ...globalComplaints,
   ];
 
@@ -306,26 +394,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.cardBackground),
                         ),
-                        // child: DropdownButtonHideUnderline(
-                        //   child: DropdownButton<String>(
-                        //     value: _selectedHostelId,
-                        //     items: [
-                        //       const DropdownMenuItem(
-                        //         value: "ALL",
-                        //         child: Text("All Hostels"),
-                        //       ),
-                        //       ...globalHostels.map(
-                        //         (hostel) => DropdownMenuItem(
-                        //           value: hostel.id,
-                        //           child: Text(hostel.name),
-                        //         ),
-                        //       ),
-                        //     ],
-                        //     onChanged: (value) {
-                        //       setState(() => _selectedHostelId = value!);
-                        //     },
-                        //   ),
-                        // ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedHostelId,
+                            items: [
+                              const DropdownMenuItem(
+                                value: "ALL",
+                                child: Text("All Hostels"),
+                              ),
+                              ...globalHostels.map(
+                                (hostel) => DropdownMenuItem(
+                                  value: hostel.id,
+                                  child: Text(hostel.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() => _selectedHostelId = value!);
+                            },
+                          ),
+                        ),
                       ),
                     ],
                   ),

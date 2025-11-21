@@ -7,7 +7,7 @@ import '../../widgets/hostel_card.dart';
 import '../../widgets/custom_text_field.dart';
 import 'hostel_details_screen.dart';
 import '../menu/menu_drawer.dart';
-import 'add_hostel_screen.dart';
+import '../admin/add_hostel_screen.dart';
 
 class HostelSelectionScreen extends StatefulWidget {
   final String searchQuery;

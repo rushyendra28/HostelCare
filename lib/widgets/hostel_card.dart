@@ -84,28 +84,28 @@ class HostelCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             // RATING
-            // Row(
-            //   children: [
-            //     const Icon(
-            //       Icons.star_rounded,
-            //       color: Color(0xFFFFC107),
-            //       size: 20,
-            //     ),
-            //     const SizedBox(width: 4),
-            //     Text(
-            //       hostel.rating.toStringAsFixed(1),
-            //       style: AppStyles.body1.copyWith(
-            //         fontWeight: FontWeight.w600,
-            //         color: AppColors.textDark,
-            //       ),
-            //     ),
-            //     const SizedBox(width: 16),
-            //     Text(
-            //       "${hostel.reviews} reviews",
-            //       style: AppStyles.body2.copyWith(color: AppColors.textGray),
-            //     ),
-            //   ],
-            // ),
+            Row(
+              children: [
+                const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFC107),
+                  size: 20,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  hostel.rating.toStringAsFixed(1),
+                  style: AppStyles.body1.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  "${hostel.reviews} reviews",
+                  style: AppStyles.body2.copyWith(color: AppColors.textGray),
+                ),
+              ],
+            ),
 
             // RED "EXIT TO JOIN" MESSAGE
             if (showExitMessage && !isJoined) ...[
